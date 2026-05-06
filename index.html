@@ -268,7 +268,7 @@
         <path d="M18 7L28.3923 13V25L18 31L7.60769 25V13L18 7Z" fill="#D85A30" opacity="0.2"/>
         <path d="M18 11L24.9282 15V23L18 27L11.0718 23V15L18 11Z" fill="#D85A30"/>
       </svg>
-      <span class="eyebrow">letmeaskclaude.github.io</span>
+      <span class="eyebrow">walalapancho.github.io/LMACFY</span>
     </div>
 
     <h1>Let me ask <em>Claude</em><br>for you…</h1>
@@ -299,7 +299,7 @@
   <footer>
     Not affiliated with Anthropic.<br>
     Made with a hint of sarcasm —
-    <a href="https://github.com/letmeaskclaude/letmeaskclaude.github.io" target="_blank">open source on GitHub</a>
+    <a href="https://github.com/walalapancho/LMACFY" target="_blank">open source on GitHub</a>
   </footer>
 
   <script>
@@ -310,7 +310,8 @@
         return;
       }
 
-      const base = location.origin + location.pathname.replace('index.html','');
+      let base = location.origin + location.pathname.split('index.html')[0];
+      if (!base.endsWith('/')) base += '/';
       const url = base + 'ask.html?q=' + encodeURIComponent(q);
 
       document.getElementById('urlDisplay').textContent = url;
