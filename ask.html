@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Let Me Ask Claude For You…</title>
+  <meta name="description" content="Let me ask Claude for you…" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --coral: #D85A30;
+      --coral-light: #FAECE7;
+      --coral-mid: #F0997B;
+      --coral-dark: #993C1D;
+      --ink: #1a1714;
+      --ink-muted: #5F5E5A;
+      --ink-faint: #B4B2A9;
+      --bg: #FBF8F5;
+      --surface: #FFFFFF;
+      --border: rgba(26,23,20,0.10);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden;
+    }
+
+    /* Animated background blob */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0;
+      pointer-events: none;
+      animation: blob-in 1.2s ease forwards;
+    }
+
+    .blob-1 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(216,90,48,0.15), transparent 70%);
+      top: -100px; right: -80px;
+      animation-delay: 0.2s;
+    }
+
+    .blob-2 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(216,90,48,0.10), transparent 70%);
+      bottom: -60px; left: -60px;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes blob-in {
+      to { opacity: 1; }
+    }
+
+    /* Scene */
+    .scene {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2.5rem;
+    }
+
+    /* Logo + eyebrow */
+    .logo-area {
+      text-align: center;
+      opacity: 0;
+      animation: fade-up 0.6s ease 0.1s forwards;
+    }
+
+    .logo-hex {
+      width: 40px; height: 40px;
+      margin-bottom: 0.75rem;
+    }
+
+    .heading {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 400;
+      color: var(--ink-muted);
+      letter-spacing: -0.02em;
+    }
+
+    .heading em {
+      font-style: italic;
+      color: var(--coral);
+    }
+
+    /* Browser mockup */
+    .browser {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 48px rgba(26,23,20,0.08);
+      opacity: 0;
+      animation: fade-up 0.7s ease 0.3s forwards;
+    }
+
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.8rem 1rem;
+      background: #F5F2EF;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #FF5F57; }
+    .dot-y { background: #FEBC2E; }
+    .dot-g { background: #28C840; }
+
+    .address-bar {
+      flex: 1;
+      margin: 0 8px;
+      background: #EDEAE6;
+      border-radius: 6px;
+      padding: 0.3rem 0.75rem;
+      font-size: 11px;
+      color: var(--ink-muted);
+      font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Claude chat interface inside browser */
+    .chat-area {
+      padding: 1.5rem 1.25rem;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Typing row */
+    .input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      border: 1.5px solid var(--coral);
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
+      background: #fff;
+    }
+
+    .input-text {
+      flex: 1;
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.5;
+      min-height: 1.5em;
+      word-break: break-word;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: var(--coral);
+      vertical-align: text-bottom;
+      border-radius: 1px;
+      animation: blink 0.9s steps(1) infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .send-btn {
+      width: 30px; height: 30px;
+      background: var(--coral);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .send-btn svg { width: 14px; height: 14px; }
+
+    /* Claude response bubble */
+    .response-bubble {
+      display: flex;
+      gap: 10px;
+      opacity: 0;
+    }
+
+    .claude-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--coral-light);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .claude-avatar svg { width: 16px; height: 16px; }
+
+    .bubble-dots {
+      background: #F5F2EF;
+      border-radius: 12px;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dot-typing {
+      width: 6px; height: 6px;
+      background: var(--ink-faint);
+      border-radius: 50%;
+      animation: typing-bounce 1.2s infinite;
+    }
+
+    .dot-typing:nth-child(2) { animation-delay: 0.2s; }
+    .dot-typing:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing-bounce {
+      0%,60%,100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    /* Redirect message */
+    .redirect-msg {
+      text-align: center;
+      opacity: 0;
+    }
+
+    .redirect-msg p {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-go {
+      display: inline-block;
+      padding: 0.7rem 1.5rem;
+      background: var(--coral);
+      color: white;
+      border-radius: 9px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: background 0.18s;
+    }
+
+    .btn-go:hover { background: var(--coral-dark); }
+
+    /* Footer */
+    .footer-link {
+      font-size: 12px;
+      color: var(--ink-faint);
+      text-decoration: none;
+      opacity: 0;
+      animation: fade-up 0.5s ease 0.6s forwards;
+    }
+
+    .footer-link:hover { color: var(--coral); }
+
+    /* Animations */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* State classes */
+    .send-btn.visible { opacity: 1; }
+    .response-bubble.visible { opacity: 1; transition: opacity 0.4s; }
+    .redirect-msg.visible { opacity: 1; transition: opacity 0.5s; }
+
+    /* Grain */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="scene">
+
+    <div class="logo-area">
+      <svg class="logo-hex" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 3L35.3923 12V28L20 37L4.60769 28V12L20 3Z" fill="#D85A30" opacity="0.12"/>
+        <path d="M20 7L32.1244 14.5V29.5L20 37L7.87564 29.5V14.5L20 7Z" fill="#D85A30" opacity="0.2"/>
+        <path d="M20 12L27.8564 16.5V25.5L20 30L12.1436 25.5V16.5L20 12Z" fill="#D85A30"/>
+      </svg>
+      <h1 class="heading">Let me ask <em>Claude</em> for you…</h1>
+    </div>
+
+    <!-- Browser mockup -->
+    <div class="browser">
+      <div class="browser-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <div class="address-bar" id="addressBar">claude.ai</div>
+      </div>
+      <div class="chat-area">
+        <div class="input-row">
+          <div class="input-text" id="typingText"><span class="cursor"></span></div>
+          <div class="send-btn" id="sendBtn">
+            <svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 3L17 10H13V17H7V10H3L10 3Z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="response-bubble" id="responseBubble">
+          <div class="claude-avatar">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1.5L13.1962 4.5V10.5L8 13.5L2.80385 10.5V4.5L8 1.5Z" fill="#D85A30"/>
+            </svg>
+          </div>
+          <div class="bubble-dots">
+            <div class="dot-typing"></div>
+            <div class="dot-typing"></div>
+            <div class="dot-typing"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Redirect message -->
+    <div class="redirect-msg" id="redirectMsg">
+      <p>Taking you to Claude now…</p>
+      <a id="goBtn" class="btn-go" href="#" target="_blank">Open in Claude ↗</a>
+    </div>
+
+    <a class="footer-link" href="index.html">← Make your own link</a>
+
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const question = params.get('q') || '';
+
+    if (!question) {
+      document.getElementById('typingText').innerHTML = '<em style="color:var(--ink-faint)">No question found. Try making a link from the homepage.</em>';
+    }
+
+    const claudeUrl = 'https://claude.ai/new?q=' + encodeURIComponent(question);
+    document.getElementById('goBtn').href = claudeUrl;
+
+    const addressBar = document.getElementById('addressBar');
+    const typingEl = document.getElementById('typingText');
+    const sendBtn = document.getElementById('sendBtn');
+    const responseBubble = document.getElementById('responseBubble');
+    const redirectMsg = document.getElementById('redirectMsg');
+
+    let charIndex = 0;
+    let typed = '';
+
+    function typeChar() {
+      if (charIndex < question.length) {
+        typed += question[charIndex];
+        charIndex++;
+        typingEl.innerHTML = escapeHtml(typed) + '<span class="cursor"></span>';
+        // Update address bar while typing
+        if (charIndex === Math.floor(question.length * 0.4)) {
+          addressBar.textContent = 'claude.ai/new?q=' + question.substring(0, 20) + '…';
+        }
+        const delay = 30 + Math.random() * 40;
+        setTimeout(typeChar, delay);
+      } else {
+        // Done typing — show send button
+        sendBtn.classList.add('visible');
+        // Remove cursor after short pause
+        setTimeout(() => {
+          typingEl.innerHTML = escapeHtml(typed);
+          // "Send"
+          setTimeout(showResponse, 400);
+        }, 300);
+      }
+    }
+
+    function showResponse() {
+      sendBtn.classList.remove('visible');
+      responseBubble.classList.add('visible');
+      addressBar.textContent = 'claude.ai/new';
+      // After showing typing dots, show redirect
+      setTimeout(() => {
+        redirectMsg.classList.add('visible');
+        // Auto-redirect after 1.5s
+        setTimeout(() => {
+          window.location.href = claudeUrl;
+        }, 1800);
+      }, 1600);
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Start typing after animations settle
+    if (question) {
+      setTimeout(typeChar, 900);
+    }
+  </script>
+
+</body>
+</html>
